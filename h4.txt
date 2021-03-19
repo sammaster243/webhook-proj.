@@ -1,0 +1,31 @@
+js
+
+Pusher- The user who pushed the commits.
+Sender - The user that triggered the event.
+Author -
+commits - An array of commit objects describing the pushed commits.
+
+added
+removed
+
+make a loop through all the commits
+
+loop through all the files that have changed or been added or removed.
+
+everytime a commit is found pull out an author and a timestamp.
+
+for each file pull out who modified it, name of the file, when they did it, and whether it was added, deleted, or modified.
+--------------------------------------------------------------------------------------------------
+github
+
+-create a bunch of files so that the code  
+
+var body = msg.req.body;
+var output = [];
+body.commits.forEach(function(commit) {
+    node.log("test log here: ", commit.message)
+    output.push("Message: " + commit.message);
+    output.push({name: "Modified files: ",  files: body.modified});
+});
+
+output.push(body);
