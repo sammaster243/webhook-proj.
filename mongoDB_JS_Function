@@ -1,0 +1,43 @@
+var body = msg.req.body;
+var output = [];
+body.commits.forEach(function(commit) {
+    node.log("test log here: ", commit.message);
+     var timestamp = commit.timestamp;
+     var author = commit.author.name;
+    commit.modified.forEach(function(modified) {
+        var filename = modified;
+        var entry = {
+           "timestamp": timestamp,
+            "filename": filename,
+            "author": author,
+            "message": commit.message,
+            "action": "modified"
+        };
+        output.push(entry); 
+     });
+     commit.added.forEach(function(added) {
+        var filename = added;
+        var entry = {
+           "timestamp": timestamp,
+            "filename": filename,
+            "author": author,
+            "message": commit.message,
+            "action": "added"
+        };
+        output.push(entry); 
+     });
+     commit.removed.forEach(function(removed) {
+        var filename = removed;
+        var entry = {
+           "timestamp": timestamp,
+            "filename": filename,
+            "author": author,
+            "message": commit.message,
+            "action": "removed"
+        };
+        output.push(entry); 
+     }); 
+});
+msg.payload = output;
+
+return msg;
