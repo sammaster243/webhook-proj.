@@ -1,0 +1,71 @@
+import json
+import smtplib, ssl
+import pymongo
+from datetime import datetime
+from pymongo import MongoClient
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+from pprint import pprint
+
+client = MongoClient("mongodb+srv://sammaster123:dogmaster123@cluster0.hs3xu.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
+db = client.myFirstDatabase
+collection = db["sam_collection"]
+# pprint(db)
+
+port = 465  # For SSL
+password = "HCL12345"
+smtp_server = "smtp.gmail.com"  # Electronic mail transmission
+sender_email = "dummysam245@gmail.com"  # Enter sender address
+receiver_email = "dummysam245@gmail.com"  # Enter receiver address
+
+context = ssl.create_default_context()
+
+unique_files = collection.distinct("filename")
+print(unique_files)
+for unique_file in unique_files:
+    print(unique_file)
+    files = []
+    delta = 0
+    differing_days = 0
+    # get the last two records with this file name
+    for y in collection.find({"filename": unique_file}).sort("timestamp", -1).limit(2):
+        files.append(y)
+        # print(y)
+
+    last_record = files[0]
+    last_record_author = last_record['author']
+    print('last person to touch file is: ', last_record['author'])
+    print("the action was: ", last_record['action'])
+    last_record_date = datetime.fromisoformat(last_record['timestamp'])
+    if len(files) > 1:
+        secondary_record_date = datetime.fromisoformat(files[1]['timestamp'])
+        delta = last_record_date - secondary_record_date
+        differing_days = delta.days
+        print(differing_days)
+
+    # number_of_updates = collection.find({"filename": unique_file, "author": last_record_author}).count_documents
+    number_of_updates = collection.count_documents({"filename": unique_file, "author": last_record_author})
+    print(number_of_updates)
+
+
+    # datetime_object0 = datetime.strptime(files[0]['timestamp'], '%Y-%m-%dT%H:%M:%S%z')
+    # datetime_object1 = datetime.strptime(files[1]['timestamp'], '%Y-%m-%dT%H:%M:%S%z')
+    # delta = (datetime_object0 - datetime_object1).days
+
+    if differing_days >= 1 or number_of_updates <= 1:
+        print("Suspicious activity detected in the file " + last_record['filename'])
+        with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
+            print('Test email')
+            server.login(sender_email, password)
+            msg = MIMEMultipart("alternative")
+            msg['Subject'] = 'Suspicious activity'
+            msg['From'] = sender_email
+            msg['To'] = receiver_email
+            body = f"Suspicious activity detected in the file {last_record['filename']}. Last touched by {last_record['author']}, action: {last_record['action']}"
+            part1 = MIMEText(body, "plain")
+            msg.attach(part1)
+            server.sendmail(sender_email, receiver_email, msg.as_string())
+
+serverStatusResult = db.command("serverStatus")
+# pprint(serverStatusResult)
